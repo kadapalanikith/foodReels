@@ -5,7 +5,7 @@ const foodpartnerModel = require('../models/foodpartner.model');
 
 async function registerUser(req, res) {
 
-    const { fullName, email, password } = req.body;
+    const { firstName, lastName, email, password } = req.body;
     const isUserAlreadyExist = await userModel.findOne({ email });
 
     if (isUserAlreadyExist) {
@@ -15,7 +15,8 @@ async function registerUser(req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await userModel.create({
-        fullName,
+        firstName,
+        lastName,
         email,
         password: hashedPassword
     });
@@ -26,7 +27,8 @@ async function registerUser(req, res) {
 
     res.status(201).json({
         message: 'User created successfully', user: {
-            fullName: user.fullName,
+            firstName: user.firstName,
+            lastName: user.lastName,
             email: user.email,
             _id: user._id
         }
@@ -55,7 +57,8 @@ async function loginUser(req, res) {
     res.status(200).json({
         message: 'Login successful',
         user: {
-            fullName: user.fullName,
+            firstName: user.firstName,
+            lastName: user.lastName,
             email: user.email,
             _id: user._id
         }
