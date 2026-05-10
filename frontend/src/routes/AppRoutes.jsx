@@ -5,15 +5,18 @@ import UserRegister from "../pages/auth/UserRegister";
 import UserLogin from "../pages/auth/UserLogin";
 import FoodPartnerRegister from "../pages/auth/FoodPartnerRegister";
 import FoodPartnerLogin from "../pages/auth/FoodPartnerLogin";
+import Home from "../pages/general/Home";
+
 
 const AppRoutes = () => {
   return (
     <Router>
       <Routes>
         {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/register" replace />} />
+        <Route path="/" element={<Home />} />
+        <Route path='/create-food' element={<div>Create Food</div>}/>
 
-        {/* Role selection */}
+        {/* Role selection */}``
         <Route path="/register" element={<ChooseRegister />} />
 
         {/* User routes */}

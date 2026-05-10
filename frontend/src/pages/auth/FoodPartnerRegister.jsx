@@ -4,8 +4,31 @@ import '../../styles/variables.css';
 import '../../styles/auth.css';
 
 const FoodPartnerRegister = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const name = e.target.name.value
+    const contactName = e.target.contactName.value
+    const email = e.target.email.value
+    const phone = e.target.phone.value
+    const address = e.target.address.value
+    const password = e.target.password.value
+
+    const response = await axios.post('http://localhost:3000/api/auth/register', {
+      name,
+      contactName,
+      email,
+      phone,
+      address,
+      password
+    }, {
+      withCredentials: true
+    })
+
+    console.log(response.data)
+
+    navigate("/create-food")
+  }
 
   return (
     <div className="auth-page">
