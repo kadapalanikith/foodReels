@@ -1,0 +1,321 @@
+/* ============================================================
+   home.css — FoodReels Home Page (Reels Feed)
+   ============================================================ */
+
+@import './variables.css';
+
+/* ── Feed container ── */
+.reels-feed {
+  width: 100vw;
+  height: 100dvh;          /* dynamic viewport height — works on mobile */
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  background: #000;
+  -webkit-overflow-scrolling: touch;
+
+  /* Hide scrollbar but keep scrolling */
+  scrollbar-width: none;
+}
+.reels-feed::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Individual reel slide ── */
+.reel-slide {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+  background: #000;
+}
+
+/* ── Video element fills the slide ── */
+.reel-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Gradient scrim — bottom-heavy for readability ── */
+.reel-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.35) 35%,
+    rgba(0, 0, 0, 0.10) 65%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Top-left: store branding chip ── */
+.reel-store-chip {
+  position: absolute;
+  top: env(safe-area-inset-top, 16px);
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-full);
+  padding: 6px 14px 6px 8px;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.reel-store-chip:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.03);
+}
+.reel-store-chip__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-brand);
+}
+.reel-store-chip__name {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.01em;
+}
+
+/* ── Right sidebar actions ── */
+.reel-actions {
+  position: absolute;
+  right: 16px;
+  bottom: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+.reel-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #fff;
+}
+.reel-action-btn__icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.reel-action-btn:hover .reel-action-btn__icon {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.12);
+}
+.reel-action-btn.liked .reel-action-btn__icon {
+  background: rgba(239, 68, 68, 0.25);
+}
+.reel-action-btn__label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+}
+.reel-action-btn svg {
+  transition: transform var(--transition-fast);
+}
+.reel-action-btn:active svg {
+  transform: scale(0.85);
+}
+
+/* ── Bottom overlay: description + visit store ── */
+.reel-bottom {
+  position: absolute;
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  right: 0;
+  padding: 0 16px 28px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Description — max 2 lines, truncated with ellipsis */
+.reel-description {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.5;
+  /* 2-line clamp */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 64px); /* leave room away from right actions */
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+.reel-description.expanded {
+  -webkit-line-clamp: unset;
+  display: block;
+}
+.reel-description__store-name {
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Visit Store button */
+.reel-visit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    var(--color-brand) 0%,
+    #ef4444 100%
+  );
+  box-shadow:
+    0 4px 20px rgba(249, 115, 22, 0.50),
+    0 1px 4px rgba(0, 0, 0, 0.30);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    filter var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+.reel-visit-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+  pointer-events: none;
+}
+.reel-visit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 30px rgba(249, 115, 22, 0.65),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+  filter: brightness(1.05);
+}
+.reel-visit-btn:active {
+  transform: translateY(0px) scale(0.98);
+  box-shadow: 0 2px 10px rgba(249, 115, 22, 0.40);
+}
+.reel-visit-btn svg {
+  flex-shrink: 0;
+}
+
+/* ── Mute / Volume indicator ── */
+.reel-mute-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: rgba(0, 0, 0, 0.60);
+  backdrop-filter: blur(6px);
+  border-radius: 50%;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.reel-mute-badge.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ── Progress bar (thin line at top of each slide) ── */
+.reel-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--color-brand);
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  transition: width 0.25s linear;
+  z-index: 10;
+}
+
+/* ── Scroll hint (first load) ── */
+.scroll-hint {
+  position: absolute;
+  bottom: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: bounceUp 1.6s ease-in-out infinite;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.scroll-hint span {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@keyframes bounceUp {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(-8px); }
+}
+
+/* ── Loading skeleton ── */
+.reel-skeleton {
+  width: 100%;
+  height: 100dvh;
+  scroll-snap-align: start;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reel-skeleton__spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(249, 115, 22, 0.25);
+  border-top-color: var(--color-brand);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
