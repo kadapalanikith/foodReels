@@ -7,6 +7,7 @@ import FoodPartnerRegister from "../pages/auth/FoodPartnerRegister";
 import FoodPartnerLogin from "../pages/auth/FoodPartnerLogin";
 import Home from "../pages/general/Home";
 import Profile from "../pages/food-partner/Profile";
+import CreateFood from "../pages/food-partner/CreateFood";
 
 
 const AppRoutes = () => {
@@ -15,7 +16,7 @@ const AppRoutes = () => {
       <Routes>
         {/* Default redirect */}
         <Route path="/" element={<Home />} />
-        <Route path='/create-food' element={<div>Create Food</div>}/>
+        <Route path='/create-food' element={<CreateFood />} />
 
         {/* Role selection */}``
         <Route path="/register" element={<ChooseRegister />} />

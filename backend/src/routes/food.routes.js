@@ -13,4 +13,8 @@ router.post('/', authFoodPartnerMiddleware, upload.single('image'), foodControll
 
 router.get('/',authMiddleware.authUserMiddleware, foodController.getFoodItems);
 
+router.post('/like', authMiddleware.authUserMiddleware, foodController.likeFoodController);
+
+router.post('/save', authMiddleware.authUserMiddleware, foodController.saveFood);
+
 module.exports = router;
