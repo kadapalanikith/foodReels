@@ -1,192 +1,209 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/profile.css';
+import { getMyProfile } from '../../api/partner.api';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../components/ui/Toast';
 
-/* ─────────────────────────────────────────────
-   Mock data — replace with API response
-───────────────────────────────────────────── */
-const PARTNER_DATA = {
-  businessName: 'Spice Garden',
-  address: '12, MG Road, Bengaluru, Karnataka',
-  avatarUrl: null,                    // set to URL string when available
-  totalMeals: 43,
-  customersServed: '15K',
-  reels: [
-    { id: 1, thumbnailUrl: null, videoUrl: '/videos/testMeal.mp4', likes: 2341, views: '18K' },
-    { id: 2, thumbnailUrl: null, videoUrl: '/videos/testMeal.mp4', likes: 1892, views: '12K' },
-    { id: 3, thumbnailUrl: null, videoUrl: '/videos/testMeal.mp4', likes: 3210, views: '25K' },
-    { id: 4, thumbnailUrl: null, videoUrl: '/videos/testMeal.mp4', likes: 890,  views: '6K'  },
-    { id: 5, thumbnailUrl: null, videoUrl: '/videos/testMeal.mp4', likes: 4520, views: '31K' },
-    { id: 6, thumbnailUrl: null, videoUrl: '/videos/testMeal.mp4', likes: 1130, views: '9K'  },
-    { id: 7, thumbnailUrl: null, videoUrl: '/videos/testMeal.mp4', likes: 2780, views: '20K' },
-    { id: 8, thumbnailUrl: null, videoUrl: '/videos/testMeal.mp4', likes: 660,  views: '5K'  },
-    { id: 9, thumbnailUrl: null, videoUrl: '/videos/testMeal.mp4', likes: 5100, views: '40K' },
-  ],
-};
-
-/* ── Utility: format numbers ── */
 function fmt(n) {
   if (typeof n === 'string') return n;
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace('.0', '') + 'M';
-  if (n >= 1_000)     return (n / 1_000).toFixed(1).replace('.0', '') + 'K';
-  return String(n);
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace('.0', '') + 'K';
+  return String(n || 0);
 }
 
-/* ─────────────────────────────────────────────
-   Profile Page Component
-───────────────────────────────────────────── */
 const Profile = () => {
-  const [partner] = useState(PARTNER_DATA);
+  const navigate = useNavigate();
+  const { partner: authPartner, logout } = useAuth();
+  const { toast } = useToast();
+
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await getMyProfile();
+        setProfileData(res.data.data);
+      } catch (err) {
+        const msg = err.response?.data?.message || 'Failed to load profile.';
+        setError(msg);
+        toast({ message: msg, type: 'error' });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [toast]);
+
+  const handleLogout = async () => {
+    await logout();
+    toast({ message: 'Logged out successfully.', type: 'info' });
+    navigate('/food-partner/login');
+  };
+
+  if (loading) {
+    return (
+      <div className="profile-page profile-page--loading" aria-label="Loading profile…">
+        <div className="profile-skeleton">
+          <div className="skeleton-block skeleton-avatar" />
+          <div className="skeleton-block skeleton-name" />
+          <div className="skeleton-block skeleton-stat" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="profile-page profile-page--error">
+        <div className="profile-error">
+          <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: '2rem', color: '#f97316' }} aria-hidden="true" />
+          <p>{error}</p>
+          <button className="profile-edit-btn" onClick={() => window.location.reload()}>
+            <i className="fa-solid fa-rotate-right" aria-hidden="true" /> Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { partner, reels = [], stats = {} } = profileData || {};
 
   return (
     <div className="profile-page">
 
-      {/* ════ HEADER CARD ════ */}
-      <div className="profile-header">
-
-        {/* Top row: avatar + info */}
+      {/* ════ HEADER ════ */}
+      <header className="profile-header">
         <div className="profile-header__top">
 
           {/* Avatar */}
           <div className="profile-avatar">
-            {partner.avatarUrl ? (
-              <img src={partner.avatarUrl} alt={partner.businessName} />
+            {partner?.avatarUrl ? (
+              <img src={partner.avatarUrl} alt={partner.name} />
             ) : (
-              <div className="profile-avatar__placeholder">
-                {/* store / shop icon */}
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M20 4H4v2l8 5 8-5V4zm0 4.236-8 5-8-5V20h16V8.236z"/>
-                </svg>
+              <div className="profile-avatar__placeholder" aria-hidden="true">
+                <i className="fa-solid fa-store" style={{ fontSize: 28, color: 'rgba(255,255,255,0.5)' }} />
               </div>
             )}
-            {/* edit overlay */}
-            <div className="profile-avatar__edit" role="button" aria-label="Change avatar">
-              <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <div className="profile-avatar__edit" role="button" aria-label="Change avatar" tabIndex={0}>
+              <i className="fa-solid fa-pen" style={{ fontSize: 10, color: '#fff' }} aria-hidden="true" />
             </div>
           </div>
 
-          {/* Business name + address + edit button */}
+          {/* Business info */}
           <div className="profile-info">
-            <h1 className="profile-info__name">{partner.businessName}</h1>
+            <h1 className="profile-info__name">{partner?.name || authPartner?.name}</h1>
 
-            <div className="profile-info__address" role="button" aria-label="View address">
-              {/* pin icon */}
-              <svg viewBox="0 0 24 24">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
-              <span>{partner.address}</span>
+            <div className="profile-info__address" aria-label="Restaurant address">
+              <i className="fa-solid fa-location-dot" aria-hidden="true" />
+              <span>{partner?.address || 'No address provided'}</span>
             </div>
 
-            <button id="edit-profile-btn" className="profile-edit-btn">
-              {/* pencil icon */}
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.46a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-              </svg>
-              Edit Profile
-            </button>
+            <div className="profile-info__actions">
+              <button id="edit-profile-btn" className="profile-edit-btn">
+                <i className="fa-solid fa-pen-to-square" aria-hidden="true" /> Edit Profile
+              </button>
+              <button className="profile-logout-btn" onClick={handleLogout}>
+                <i className="fa-solid fa-right-from-bracket" aria-hidden="true" /> Sign Out
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ── Stats row ── */}
-        <div className="profile-stats">
-          <div className="profile-stat">
-            <span className="profile-stat__label">Total Meals</span>
-            <span className="profile-stat__value">{fmt(partner.totalMeals)}</span>
+        {/* Stats row */}
+        <div className="profile-stats" role="list">
+          <div className="profile-stat" role="listitem">
+            <span className="profile-stat__value">{fmt(stats.totalReels || reels.length)}</span>
+            <span className="profile-stat__label">Reels</span>
           </div>
-          <div className="profile-stat">
-            <span className="profile-stat__label">Customers Served</span>
-            <span className="profile-stat__value">{fmt(partner.customersServed)}</span>
+          <div className="profile-stat" role="listitem">
+            <span className="profile-stat__value">{fmt(stats.totalLikes)}</span>
+            <span className="profile-stat__label">
+              <i className="fa-solid fa-heart" style={{ color: '#ef4444', marginRight: 4 }} aria-hidden="true" />
+              Likes
+            </span>
+          </div>
+          <div className="profile-stat" role="listitem">
+            <span className="profile-stat__value">{fmt(stats.totalViews)}</span>
+            <span className="profile-stat__label">
+              <i className="fa-solid fa-eye" style={{ color: '#64748b', marginRight: 4 }} aria-hidden="true" />
+              Views
+            </span>
           </div>
         </div>
-
-      </div>{/* /profile-header */}
+      </header>
 
       {/* ════ VIDEO GRID ════ */}
-      <div className="profile-grid-header">
-        <span className="profile-grid-header__title">My Reels</span>
-        <span className="profile-grid-header__count">{partner.reels.length} videos</span>
-      </div>
-
-      <div className="profile-grid">
-        {partner.reels.length === 0 ? (
-          <div className="profile-grid-empty">
-            {/* video-off icon */}
-            <svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4.48l4 3.98v-11l-4 3.5zm-2-.79V18H4V6h12v3.69z"/></svg>
-            <p>No reels yet. Share your first food video!</p>
-            <button id="add-first-reel-btn" className="profile-add-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-              Add Reel
-            </button>
+      <section aria-label="My reels">
+        <div className="profile-grid-header">
+          <span className="profile-grid-header__title">
+            <i className="fa-solid fa-clapperboard" style={{ marginRight: 8, color: '#f97316' }} aria-hidden="true" />
+            My Reels
+          </span>
+          <div className="profile-grid-header__actions">
+            <span className="profile-grid-header__count">{reels.length} videos</span>
+            <Link to="/create-food" className="profile-add-reel-btn" aria-label="Add new reel">
+              <i className="fa-solid fa-plus" aria-hidden="true" /> Add Reel
+            </Link>
           </div>
-        ) : (
-          partner.reels.map((reel) => (
-            <GridCell key={reel.id} reel={reel} />
-          ))
-        )}
-      </div>
+        </div>
 
+        <div className="profile-grid" role="list">
+          {reels.length === 0 ? (
+            <div className="profile-grid-empty" role="listitem">
+              <i className="fa-solid fa-film" style={{ fontSize: '3rem', opacity: 0.4 }} aria-hidden="true" />
+              <p>No reels yet. Share your first food video!</p>
+              <Link to="/create-food" id="add-first-reel-btn" className="profile-add-btn">
+                <i className="fa-solid fa-plus" aria-hidden="true" /> Add Reel
+              </Link>
+            </div>
+          ) : (
+            reels.map((reel) => <GridCell key={reel._id} reel={reel} />)
+          )}
+        </div>
+      </section>
     </div>
   );
 };
 
-/* ─────────────────────────────────────────────
-   Grid Cell — individual video thumbnail
-───────────────────────────────────────────── */
+/* ─── Grid Cell ─── */
 function GridCell({ reel }) {
   const videoRef = React.useRef(null);
 
-  const handleMouseEnter = () => {
-    videoRef.current?.play().catch(() => {});
-  };
+  const handleMouseEnter = () => videoRef.current?.play().catch(() => {});
   const handleMouseLeave = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
+    if (videoRef.current) { videoRef.current.pause(); videoRef.current.currentTime = 0; }
   };
 
   return (
     <div
-      id={`reel-cell-${reel.id}`}
+      id={`reel-cell-${reel._id}`}
       className="profile-grid-cell"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      role="button"
-      aria-label={`View reel ${reel.id}`}
+      role="listitem"
       tabIndex={0}
+      aria-label={`Reel: ${reel.name}, ${fmt(reel.likeCount)} likes`}
+      onKeyDown={(e) => e.key === 'Enter' && videoRef.current?.play().catch(() => {})}
     >
-      {/* Thumbnail or video */}
-      {reel.thumbnailUrl ? (
-        <img src={reel.thumbnailUrl} alt={`Reel ${reel.id} thumbnail`} />
-      ) : (
-        <video
-          ref={videoRef}
-          src={reel.videoUrl}
-          muted
-          loop
-          playsInline
-          preload="metadata"
-        />
-      )}
+      <video ref={videoRef} src={reel.video} muted loop playsInline preload="metadata" aria-label={reel.name} />
 
-      {/* Play badge (top-right) */}
-      <div className="profile-grid-cell__play">
-        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <div className="profile-grid-cell__play" aria-hidden="true">
+        <i className="fa-solid fa-play" style={{ fontSize: 28, color: 'rgba(255,255,255,0.9)' }} />
       </div>
 
-      {/* Hover overlay — likes + views */}
-      <div className="profile-grid-cell__overlay">
-        {/* likes */}
+      <div className="profile-grid-cell__overlay" aria-hidden="true">
         <div className="profile-grid-cell__stat">
-          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          <span>{fmt(reel.likes)}</span>
+          <i className="fa-solid fa-heart" style={{ color: '#ef4444' }} />
+          <span>{fmt(reel.likeCount)}</span>
         </div>
-        {/* views */}
         <div className="profile-grid-cell__stat">
-          <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-          <span>{reel.views}</span>
+          <i className="fa-solid fa-eye" />
+          <span>{fmt(reel.viewCount)}</span>
         </div>
       </div>
-
     </div>
   );
 }

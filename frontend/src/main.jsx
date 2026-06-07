@@ -1,8 +1,18 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import './styles/variables.css'
+import './styles/toast.css'
+import './App.css'
 import App from './App.jsx'
+import { AuthProvider } from './context/AuthContext'
+import { ToastProvider } from './components/ui/Toast'
 
 createRoot(document.getElementById('root')).render(
-    <App />
+  <StrictMode>
+    <AuthProvider>
+      <ToastProvider>
+        <App />
+      </ToastProvider>
+    </AuthProvider>
+  </StrictMode>
 )
-
