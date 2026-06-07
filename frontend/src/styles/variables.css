@@ -1,10 +1,11 @@
 /* ============================================================
    variables.css — Centralized Design Tokens
    FoodReels · Light & Dark via prefers-color-scheme
+   Mobile-first · Fluid scale
    ============================================================ */
 
 /* ── Google Font ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
 
 /* ── Light Mode (default) ── */
 :root {
@@ -49,6 +50,16 @@
   --text-xl:     1.25rem;
   --text-2xl:    1.5rem;
   --text-3xl:    1.875rem;
+  --text-4xl:    2.25rem;
+  --text-5xl:    3rem;
+
+  /* Fluid Typography — clamp(min, preferred, max) */
+  --text-fluid-sm:   clamp(0.8rem, 1.5vw, 0.875rem);
+  --text-fluid-base: clamp(0.875rem, 2vw, 1rem);
+  --text-fluid-lg:   clamp(1rem, 2.5vw, 1.25rem);
+  --text-fluid-xl:   clamp(1.25rem, 3vw, 1.5rem);
+  --text-fluid-2xl:  clamp(1.5rem, 4vw, 2rem);
+  --text-fluid-3xl:  clamp(1.75rem, 5vw, 2.5rem);
 
   /* Spacing */
   --space-1:  0.25rem;
@@ -60,6 +71,17 @@
   --space-8:  2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* Fluid Spacing — for responsive sections */
+  --space-section-sm: clamp(2rem, 6vw, 4rem);
+  --space-section-md: clamp(3rem, 8vw, 6rem);
+  --space-section-lg: clamp(4rem, 10vw, 8rem);
+
+  /* Fluid Container Padding */
+  --container-px: clamp(1rem, 5vw, 1.5rem);
 
   /* Radii */
   --radius-sm:   6px;
@@ -68,9 +90,18 @@
   --radius-xl:   24px;
   --radius-full: 9999px;
 
+  /* Touch targets */
+  --touch-target: 44px;
+
   /* Transitions */
   --transition-fast:   150ms ease;
   --transition-normal: 250ms ease;
+
+  /* Z-index scale */
+  --z-dropdown:  100;
+  --z-sticky:    200;
+  --z-modal:     300;
+  --z-toast:     400;
 }
 
 /* ── Dark Mode ── */
@@ -108,4 +139,24 @@
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.40);
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.50);
   }
+}
+
+/* ── Global base resets ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Prevent horizontal overflow at root */
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Safe default focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
 }

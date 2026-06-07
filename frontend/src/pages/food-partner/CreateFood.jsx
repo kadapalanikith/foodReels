@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { createFoodReel } from '../../api/food.api';
+import { useToast } from '../../components/ui/Toast';
 import '../../styles/create-food.css';
 
 const CreateFood = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Form states
   const [name, setName] = useState('');
@@ -124,24 +126,20 @@ const CreateFood = () => {
 
     try {
       const formData = new FormData();
-      // Crucial: The backend multer setup uses upload.single('image') to capture the file
-      formData.append('image', videoFile);
+      // FIX: was 'image' — backend multer field name is 'video'
+      formData.append('video', videoFile);
       formData.append('name', name.trim());
       formData.append('description', description.trim());
 
-      const response = await axios.post('http://localhost:3000/api/food', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        withCredentials: true
-      });
+      // FIX: was hardcoded 'http://localhost:3000/api/food' — now uses centralized API module
+      await createFoodReel(formData);
 
-      console.log('Post success:', response.data);
+      toast({ message: 'Your food reel is live! 🎉', type: 'success' });
       setSuccess(true);
     } catch (err) {
-      console.error('Error sharing food reel:', err);
-      const errMsg = err.response?.data?.message || 'Failed to create food post. Please try again.';
+      const errMsg = err.response?.data?.message || 'Failed to create food reel. Please try again.';
       setError(errMsg);
+      toast({ message: errMsg, type: 'error' });
     } finally {
       setIsSubmitting(false);
     }

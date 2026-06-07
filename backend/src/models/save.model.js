@@ -1,20 +1,29 @@
-const mpngoose = require('mongoose');
+'use strict';
 
-const saveSchema = new mpngoose.Schema({
+const mongoose = require('mongoose');
+
+// FIX: was using wrong variable name `mpngoose` (typo) — crashes on Linux
+const saveSchema = new mongoose.Schema(
+  {
     user: {
-        type: mpngoose.Schema.Types.ObjectId,
-        ref: 'user',
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
+      required: [true, 'User reference is required'],
     },
     food: {
-        type: mpngoose.Schema.Types.ObjectId,
-        ref: 'food',
-        required: true
-    }
-},{
-    timestamps:true
-})
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'food',
+      required: [true, 'Food reference is required'],
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-const saveModel = mpngoose.model('save', saveSchema);
+// Compound unique index — prevents duplicate saves at DB level & speeds up lookups
+saveSchema.index({ user: 1, food: 1 }, { unique: true });
+
+const saveModel = mongoose.model('save', saveSchema);
 
 module.exports = saveModel;

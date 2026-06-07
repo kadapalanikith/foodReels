@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /landing
+Disallow: /food-partner/profile
+Disallow: /create-food
+Disallow: /user/login
+Disallow: /user/register
+Disallow: /food-partner/login
+Disallow: /food-partner/register
+
+Sitemap: https://your-app.vercel.app/sitemap.xml

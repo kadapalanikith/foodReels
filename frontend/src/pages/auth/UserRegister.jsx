@@ -1,199 +1,169 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/variables.css';
 import '../../styles/auth.css';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { registerUser } from '../../api/auth.api';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../components/ui/Toast';
 
 const UserRegister = () => {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: ''
-  });
+  const navigate = useNavigate();
+  const { loginAsUser } = useAuth();
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors((prev) => ({ ...prev, [e.target.name]: null }));
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.firstName.trim()) errs.firstName = 'First name is required.';
+    if (!formData.lastName.trim()) errs.lastName = 'Last name is required.';
+    if (!formData.email) errs.email = 'Email is required.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = 'Enter a valid email.';
+    if (!formData.password) errs.password = 'Password is required.';
+    else if (formData.password.length < 8) errs.password = 'Password must be at least 8 characters.';
+    else if (!/[A-Z]/.test(formData.password)) errs.password = 'Password must contain an uppercase letter.';
+    else if (!/[0-9]/.test(formData.password)) errs.password = 'Password must contain a number.';
+    return errs;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const firstName = e.target.firstName.value
-    const lastName = e.target.lastName.value
-    const email = e.target.email.value
-    const password = e.target.password.value
-
-    const response = await axios.post('http://localhost:3000/api/auth/register', {
-      fullName: firstName + " " + lastName,
-      email,
-      password
-    }, {
-      withCredentials: true
-    })
-
-    console.log(response.data)
-
-    navigate("/")
-
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
+    setErrors({});
+    setIsLoading(true);
+    try {
+      const res = await registerUser({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+      });
+      loginAsUser(res.data.data.user);
+      toast({ message: 'Account created! Welcome to FoodReels 🎉', type: 'success' });
+      navigate('/');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Registration failed. Please try again.';
+      toast({ message: msg, type: 'error' });
+      setErrors({ form: msg });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
 
-        {/* Brand */}
         <div className="auth-brand">
-          <div className="auth-brand-icon">🎬</div>
+          <div className="auth-brand-icon" aria-hidden="true">
+            <i className="fa-solid fa-clapperboard" />
+          </div>
           <div className="auth-brand-name">Food<span>Reels</span></div>
         </div>
 
-        {/* Role badge */}
-        <div className="auth-role-badge">👤 User</div>
+        <div className="auth-role-badge">
+          <i className="fa-solid fa-user" aria-hidden="true" /> User
+        </div>
 
-        {/* Heading */}
         <div className="auth-heading">
           <h1>Create your account</h1>
           <p>Join FoodReels and start discovering amazing food videos.</p>
         </div>
 
-        {/* Form */}
+        {errors.form && (
+          <div className="auth-error-banner" role="alert">
+            <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> {errors.form}
+          </div>
+        )}
+
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
 
           <div className="auth-field-row">
-            {/* First Name */}
             <div className="auth-field">
               <label className="auth-label" htmlFor="user-firstName">First name</label>
               <div className="auth-input-wrapper">
-                <span className="auth-input-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
+                <span className="auth-input-icon" aria-hidden="true">
+                  <i className="fa-solid fa-user" />
                 </span>
-                <input
-                  id="user-firstName"
-                  name="firstName"
-                  type="text"
-                  className="auth-input"
-                  placeholder="Alex"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  autoComplete="given-name"
-                  required
-                />
+                <input id="user-firstName" name="firstName" type="text"
+                  className={`auth-input${errors.firstName ? ' auth-input--error' : ''}`}
+                  placeholder="Alex" value={formData.firstName} onChange={handleChange}
+                  autoComplete="given-name" disabled={isLoading} />
               </div>
+              {errors.firstName && <span className="auth-field-error">{errors.firstName}</span>}
             </div>
 
-            {/* Last Name */}
             <div className="auth-field">
               <label className="auth-label" htmlFor="user-lastName">Last name</label>
               <div className="auth-input-wrapper">
-                <span className="auth-input-icon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
+                <span className="auth-input-icon" aria-hidden="true">
+                  <i className="fa-solid fa-user" />
                 </span>
-                <input
-                  id="user-lastName"
-                  name="lastName"
-                  type="text"
-                  className="auth-input"
-                  placeholder="Smith"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  autoComplete="family-name"
-                  required
-                />
+                <input id="user-lastName" name="lastName" type="text"
+                  className={`auth-input${errors.lastName ? ' auth-input--error' : ''}`}
+                  placeholder="Smith" value={formData.lastName} onChange={handleChange}
+                  autoComplete="family-name" disabled={isLoading} />
               </div>
+              {errors.lastName && <span className="auth-field-error">{errors.lastName}</span>}
             </div>
           </div>
 
-          {/* Email */}
           <div className="auth-field">
             <label className="auth-label" htmlFor="user-email">Email address</label>
             <div className="auth-input-wrapper">
-              <span className="auth-input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="20" height="16" x="2" y="4" rx="2" />
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                </svg>
+              <span className="auth-input-icon" aria-hidden="true">
+                <i className="fa-solid fa-envelope" />
               </span>
-              <input
-                id="user-email"
-                name="email"
-                type="email"
-                className="auth-input"
-                placeholder="alex@example.com"
-                value={formData.email}
-                onChange={handleChange}
-                autoComplete="email"
-                required
-              />
+              <input id="user-email" name="email" type="email"
+                className={`auth-input${errors.email ? ' auth-input--error' : ''}`}
+                placeholder="alex@example.com" value={formData.email} onChange={handleChange}
+                autoComplete="email" disabled={isLoading} />
             </div>
+            {errors.email && <span className="auth-field-error">{errors.email}</span>}
           </div>
 
-          {/* Password */}
           <div className="auth-field">
             <label className="auth-label" htmlFor="user-password">Password</label>
             <div className="auth-input-wrapper">
-              <span className="auth-input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
+              <span className="auth-input-icon" aria-hidden="true">
+                <i className="fa-solid fa-lock" />
               </span>
-              <input
-                id="user-password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                className="auth-input"
-                placeholder="Min. 8 characters"
-                value={formData.password}
-                onChange={handleChange}
-                autoComplete="new-password"
-                required
-              />
-              <button
-                type="button"
-                className="auth-input-toggle"
+              <input id="user-password" name="password" type={showPassword ? 'text' : 'password'}
+                className={`auth-input${errors.password ? ' auth-input--error' : ''}`}
+                placeholder="Min. 8 characters" value={formData.password} onChange={handleChange}
+                autoComplete="new-password" disabled={isLoading} />
+              <button type="button" className="auth-input-toggle"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                onClick={() => setShowPassword(p => !p)}
-              >
-                {showPassword ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
+                onClick={() => setShowPassword((p) => !p)}>
+                <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
               </button>
             </div>
+            {errors.password && <span className="auth-field-error">{errors.password}</span>}
           </div>
 
-          {/* Submit */}
-          <button id="user-register-btn" type="submit" className="auth-btn-primary">
-            Create Account
+          <button id="user-register-btn" type="submit" className="auth-btn-primary" disabled={isLoading}>
+            {isLoading
+              ? <><i className="fa-solid fa-spinner fa-spin" aria-hidden="true" /> Creating account…</>
+              : <><i className="fa-solid fa-user-plus" aria-hidden="true" /> Create Account</>
+            }
           </button>
 
           <p className="auth-terms">
-            By signing up you agree to our{' '}
-            <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+            By signing up you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
           </p>
         </form>
 
-        {/* Footer */}
         <p className="auth-footer">
-          Already have an account?{' '}
-          <Link to="/user/login">Sign in</Link>
+          Already have an account? <Link to="/user/login">Sign in</Link>
         </p>
       </div>
     </div>
